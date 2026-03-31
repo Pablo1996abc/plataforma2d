@@ -456,4 +456,4 @@ shape = SubResource("RectangleShape2D_4flbx")
 position = Vector2(399, 328)
 sprite_frames = SubResource("SpriteFrames_pylmc")
 animation = &"crouch"
-frame_progress = 0.719725
+frame_progress = 0.544433

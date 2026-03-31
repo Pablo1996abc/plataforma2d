@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://cibh2ljhchgsu"]
+[gd_scene format=3 uid="uid://cibh2ljhchgsu"]
 
 [ext_resource type="Texture2D" uid="uid://c6wk8fuxyk31d" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Attack.png" id="1_637nb"]
 [ext_resource type="Script" uid="uid://bk64sg0j47o55" path="res://skeleton.gd" id="1_dfc0f"]
@@ -9,6 +9,12 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dfc0f"]
 size = Vector2(59, 70)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vsooi"]
+size = Vector2(56, 71)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rsp4x"]
+size = Vector2(961, 193)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgngj"]
 atlas = ExtResource("1_637nb")
@@ -206,39 +212,37 @@ animations = [{
 "speed": 16.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_vsooi"]
-size = Vector2(56, 71)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rsp4x"]
-size = Vector2(961, 193)
-
-[node name="Skeleton" type="CharacterBody2D"]
+[node name="Skeleton" type="CharacterBody2D" unique_id=829272368]
 script = ExtResource("1_dfc0f")
+speed = null
+chase_speed = null
+health = null
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1484114788]
 position = Vector2(80, 103)
 shape = SubResource("RectangleShape2D_dfc0f")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CollisionShape2D2"]
-position = Vector2(-3, 3)
-scale = Vector2(0.98, 1.03333)
-sprite_frames = SubResource("SpriteFrames_4t2op")
-animation = &"death"
+[node name="AttackArea" type="Area2D" parent="." unique_id=1600562285]
 
-[node name="AttackArea" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1559305921]
 position = Vector2(80, 103)
 shape = SubResource("RectangleShape2D_vsooi")
 
-[node name="PlayerDetector" type="Area2D" parent="."]
+[node name="PlayerDetector" type="Area2D" parent="." unique_id=985206915]
+collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetector"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetector" unique_id=815173826]
 position = Vector2(83.5, 101.5)
 shape = SubResource("RectangleShape2D_rsp4x")
 
-[node name="RayCast2D" type="RayCast2D" parent="."]
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=188933650]
 position = Vector2(115, 83)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=677665135]
+position = Vector2(77, 106)
+scale = Vector2(0.98, 1.03333)
+sprite_frames = SubResource("SpriteFrames_4t2op")
+animation = &"idle"
 
 [connection signal="body_entered" from="PlayerDetector" to="." method="_on_player_detector_body_entered"]
 [connection signal="body_exited" from="PlayerDetector" to="." method="_on_player_detector_body_exited"]

@@ -63,12 +63,12 @@ func update_animation():
 # --- SINAIS DO PLAYER DETECTOR (Area2D) ---
 
 func _on_player_detector_body_entered(body):
-	if body.name == "Player": # Certifique-se que o nome do nó do seu personagem é "Player"
-		player_to_chase = body
+#	if body.name == "Player": # Certifique-se que o nome do nó do seu personagem é "Player"
+#		player_to_chase = body
 
 func _on_player_detector_body_exited(body):
-	if body == player_to_chase:
-		player_to_chase = null
+#	if body == player_to_chase:
+#		player_to_chase = null
 
 # Função para quando ele levar dano (chamada pelo seu personagem)
 func take_damage(amount):
