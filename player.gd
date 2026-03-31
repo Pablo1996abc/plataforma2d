@@ -1,66 +1,74 @@
 extends CharacterBody2D
 
-const SPEED = 200
-const DASH_SPEED = 600
-const JUMP_VELOCITY = -400
-var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
+const SPEED = 150.0
+const RUN_SPEED = 300.0
+const JUMP_VELOCITY = -400.0
+var GRAVITY = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 @onready var sprite = $AnimatedSprite2D
 
-# Controle de tempo para o dash
-var dash_time = 0.0
-var last_direction = 0
-
-var is_dashing = false
-
-func _ready():
-	# Inicializa o timer de dash
-	dash_time = 0.0
-	last_direction = 0
-	
+var last_key_pressed = ""
+var tap_time_threshold = 0.3 
+var last_tap_time = 0.0
+var is_running = false
 
 func _physics_process(delta):
-	var input_direction = Input.get_axis("ui_left", "ui_right")
-	
-	
-	if input_direction != 0 :
-		velocity.x = input_direction * SPEED
-	else:
-		velocity.x = 0
-	#detecta duplo click
-	if input_direction != last_direction:
-		dash_time = 0.0 #reseta tempo double click ao mudar direcao
-	if input_direction != 0:
-		dash_time += delta #aumenta tempo enqt botão pressionado
-	if dash_time <= 0.2 and input_direction == last_direction:
-		is_dashing = true
-		velocity.x = DASH_SPEED * input_direction #aplica dash
-		
-	last_direction = input_direction
+	# 1. Gravidade
 	if not is_on_floor():
-		
-		velocity.y += gravity * delta
-		
-		
-	if is_on_floor() and Input.is_action_just_pressed("ui_accept"):
+		velocity.y += GRAVITY * delta
+
+	# 2. Pulo
+	if Input.is_action_just_pressed("ui_up") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
+	# 3. Double Tap
+	check_double_tap()
+
+	# 4. Movimentação Horizontal
+	var direction: float = Input.get_axis("ui_left", "ui_right")
+	
+	# Logica de agachar ou mover
+	if Input.is_action_pressed("ui_down") and is_on_floor():
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+	elif direction != 0:
+		var current_speed = RUN_SPEED if is_running else SPEED
+		velocity.x = direction * current_speed
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+		is_running = false
+
+	# 5. Animação (Chamada única com o valor numérico correto)
+	update_animation(direction)
+	
 	move_and_slide()
 
-	update_animation(input_direction)
+func check_double_tap():
+	if Input.is_action_just_pressed("ui_right"):
+		handle_tap("right")
+	if Input.is_action_just_pressed("ui_left"):
+		handle_tap("left")
+	if not Input.is_action_pressed("ui_right") and not Input.is_action_pressed("ui_left"):
+		is_running = false
 
-func update_animation(direction):
-	# Atacando primeiro (prioridade alta)
-	if Input.is_action_pressed("attack"):
+func handle_tap(dir_name: String):
+	var current_time = Time.get_unix_time_from_system()
+	if last_key_pressed == dir_name:
+		if current_time - last_tap_time < tap_time_threshold:
+			is_running = true
+	last_key_pressed = dir_name
+	last_tap_time = current_time
+
+func update_animation(direction_val: float):
+	if Input.is_action_pressed("attack") and sprite.sprite_frames.has_animation("attack"):
 		sprite.play("attack")
-	
-	# Pulando (no ar)
-	elif not is_on_floor():
+		return
+
+	if not is_on_floor():
 		sprite.play("jump")
-	# Correndo
-	elif direction != 0:
+	elif Input.is_action_pressed("ui_down"):
+		sprite.play("crouch")
+	elif abs(direction_val) > 0.1:
+		sprite.flip_h = direction_val < 0
 		sprite.play("run")
-		sprite.flip_h = direction < 0  # vira o sprite se for pra esquerda
-	# Parado
 	else:
 		sprite.play("idle")

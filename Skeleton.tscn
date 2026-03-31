@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://cibh2ljhchgsu"]
+[gd_scene load_steps=35 format=3 uid="uid://cibh2ljhchgsu"]
 
 [ext_resource type="Texture2D" uid="uid://c6wk8fuxyk31d" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Attack.png" id="1_637nb"]
 [ext_resource type="Script" uid="uid://bk64sg0j47o55" path="res://skeleton.gd" id="1_dfc0f"]
@@ -209,6 +209,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vsooi"]
 size = Vector2(56, 71)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rsp4x"]
+size = Vector2(961, 193)
+
 [node name="Skeleton" type="CharacterBody2D"]
 script = ExtResource("1_dfc0f")
 
@@ -220,10 +223,22 @@ shape = SubResource("RectangleShape2D_dfc0f")
 position = Vector2(-3, 3)
 scale = Vector2(0.98, 1.03333)
 sprite_frames = SubResource("SpriteFrames_4t2op")
-animation = &"idle"
+animation = &"death"
 
 [node name="AttackArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
 position = Vector2(80, 103)
 shape = SubResource("RectangleShape2D_vsooi")
+
+[node name="PlayerDetector" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetector"]
+position = Vector2(83.5, 101.5)
+shape = SubResource("RectangleShape2D_rsp4x")
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+position = Vector2(115, 83)
+
+[connection signal="body_entered" from="PlayerDetector" to="." method="_on_player_detector_body_entered"]
+[connection signal="body_exited" from="PlayerDetector" to="." method="_on_player_detector_body_exited"]

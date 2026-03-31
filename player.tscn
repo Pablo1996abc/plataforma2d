@@ -1,4 +1,4 @@
-[gd_scene load_steps=66 format=3 uid="uid://b6l7oywbim274"]
+[gd_scene load_steps=67 format=3 uid="uid://b6l7oywbim274"]
 
 [ext_resource type="Script" uid="uid://d24g2k1jkju46" path="res://player.gd" id="1_4flbx"]
 [ext_resource type="Texture2D" uid="uid://betc3bgbdx12h" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Attack.png" id="2_n7ghd"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cvg8v2c64lmxy" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_AttackComboNoMovement.png" id="4_ivps1"]
 [ext_resource type="Texture2D" uid="uid://baujygq204kkm" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_AttackNoMovement.png" id="5_urp6f"]
 [ext_resource type="Texture2D" uid="uid://ivom5nbqgnlo" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Dash.png" id="6_bwjto"]
+[ext_resource type="Texture2D" uid="uid://eoigfqlijxdy" path="res://imagens/FreeKnight_v1/Colour1/Outline/120x80_PNGSheets/_Crouch.png" id="6_nvl01"]
 [ext_resource type="Texture2D" uid="uid://bbomalvr6vnf3" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Hit.png" id="7_606se"]
 [ext_resource type="Texture2D" uid="uid://dmqqnvy7pbyqw" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Idle.png" id="8_u1c27"]
 [ext_resource type="Texture2D" uid="uid://dia51u71kkyed" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Jump.png" id="9_op7ga"]
@@ -334,6 +335,14 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("6_nvl01")
+}],
+"loop": true,
+"name": &"crouch",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_hiqhm")
 }, {
 "duration": 1.0,
@@ -446,4 +455,5 @@ shape = SubResource("RectangleShape2D_4flbx")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(399, 328)
 sprite_frames = SubResource("SpriteFrames_pylmc")
-animation = &"dash"
+animation = &"crouch"
+frame_progress = 0.719725
