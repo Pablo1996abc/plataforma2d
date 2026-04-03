@@ -7,14 +7,11 @@
 [ext_resource type="Texture2D" uid="uid://d1vko8cfeuajk" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Idle.png" id="4_rsp4x"]
 [ext_resource type="Texture2D" uid="uid://bo6famcnfg4yd" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Walk.png" id="5_0rk3j"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_dfc0f"]
-size = Vector2(59, 70)
+[sub_resource type="CircleShape2D" id="CircleShape2D_vsooi"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_vsooi"]
-size = Vector2(56, 71)
+[sub_resource type="CircleShape2D" id="CircleShape2D_rsp4x"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rsp4x"]
-size = Vector2(961, 193)
+[sub_resource type="CircleShape2D" id="CircleShape2D_dfc0f"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgngj"]
 atlas = ExtResource("1_637nb")
@@ -212,28 +209,30 @@ animations = [{
 "speed": 16.0
 }]
 
-[node name="Skeleton" type="CharacterBody2D" unique_id=829272368]
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_dfc0f"]
+
+[node name="Skeleton" type="CharacterBody2D" unique_id=829272368 groups=["Enemy"]]
 script = ExtResource("1_dfc0f")
-speed = null
-chase_speed = null
-health = null
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1484114788]
 position = Vector2(80, 103)
-shape = SubResource("RectangleShape2D_dfc0f")
+shape = SubResource("CircleShape2D_vsooi")
+disabled = true
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1600562285]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1559305921]
 position = Vector2(80, 103)
-shape = SubResource("RectangleShape2D_vsooi")
+shape = SubResource("CircleShape2D_rsp4x")
+disabled = true
 
-[node name="PlayerDetector" type="Area2D" parent="." unique_id=985206915]
+[node name="DetectionArea" type="Area2D" parent="." unique_id=985206915]
 collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetector" unique_id=815173826]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=815173826]
 position = Vector2(83.5, 101.5)
-shape = SubResource("RectangleShape2D_rsp4x")
+shape = SubResource("CircleShape2D_dfc0f")
+disabled = true
 
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=188933650]
 position = Vector2(115, 83)
@@ -244,5 +243,12 @@ scale = Vector2(0.98, 1.03333)
 sprite_frames = SubResource("SpriteFrames_4t2op")
 animation = &"idle"
 
-[connection signal="body_entered" from="PlayerDetector" to="." method="_on_player_detector_body_entered"]
-[connection signal="body_exited" from="PlayerDetector" to="." method="_on_player_detector_body_exited"]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=313329152]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="NavigationAgent2D" unique_id=1049010653]
+navigation_polygon = SubResource("NavigationPolygon_dfc0f")
+
+[node name="AttackTimer" type="Timer" parent="." unique_id=123536129]
+
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_player_detector_body_entered"]
+[connection signal="body_exited" from="DetectionArea" to="." method="_on_player_detector_body_exited"]
