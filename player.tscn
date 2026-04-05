@@ -445,7 +445,7 @@ animations = [{
 "speed": 16.0
 }]
 
-[node name="Player" type="CharacterBody2D" unique_id=865413931]
+[node name="Player" type="CharacterBody2D" unique_id=865413931 groups=["Enemy", "Player", "player"]]
 script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=190188607]
@@ -455,5 +455,4 @@ shape = SubResource("RectangleShape2D_4flbx")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1372160093]
 position = Vector2(399, 328)
 sprite_frames = SubResource("SpriteFrames_pylmc")
-animation = &"crouch"
-frame_progress = 0.544433
+animation = &"attack"

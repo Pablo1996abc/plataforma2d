@@ -8,10 +8,13 @@
 [ext_resource type="Texture2D" uid="uid://bo6famcnfg4yd" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Walk.png" id="5_0rk3j"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_vsooi"]
+radius = 23.086792
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rsp4x"]
+radius = 62.39391
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_dfc0f"]
+radius = 131.59027
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgngj"]
 atlas = ExtResource("1_637nb")
@@ -215,33 +218,34 @@ animations = [{
 script = ExtResource("1_dfc0f")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1484114788]
-position = Vector2(80, 103)
+visibility_layer = 2
+position = Vector2(75, 106)
 shape = SubResource("CircleShape2D_vsooi")
-disabled = true
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1600562285]
+visibility_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1559305921]
-position = Vector2(80, 103)
+modulate = Color(1, 0.20392157, 1, 1)
+light_mask = 0
+position = Vector2(66, 118)
 shape = SubResource("CircleShape2D_rsp4x")
-disabled = true
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=985206915]
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=815173826]
-position = Vector2(83.5, 101.5)
+position = Vector2(77, 105)
 shape = SubResource("CircleShape2D_dfc0f")
-disabled = true
 
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=188933650]
 position = Vector2(115, 83)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=677665135]
-position = Vector2(77, 106)
-scale = Vector2(0.98, 1.03333)
+position = Vector2(73, 105)
+scale = Vector2(0.9766666, 1.0566651)
 sprite_frames = SubResource("SpriteFrames_4t2op")
-animation = &"idle"
+animation = &"attack"
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=313329152]
 

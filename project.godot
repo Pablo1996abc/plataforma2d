@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 [global_group]
 
 Enemy="NPCs inimigos"
+Player=""
 
 [input]
 

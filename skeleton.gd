@@ -2,198 +2,234 @@ extends CharacterBody2D
 
 enum State { PATROL, CHASE, ATTACK }
 
+# ── Exportáveis ────────────────────────────────
 @export var speed: float = 80.0
 @export var chase_speed: float = 140.0
-@export var detection_radius: float = 200.0
-@export var attack_range: float = 50.0
+@export var detection_radius: float = 500.0
+@export var attack_range: float = 460.0
 @export var attack_damage: int = 10
 @export var attack_cooldown: float = 1.2
-@export var patrol_radius: float = 150.0
+@export var patrol_distance: float = 120.0  # distância horizontal da patrulha
 
-@export var max_health: int = 100
-var health: int = max_health
+@export var max_health: int = 50
+var health: int
 
-# Sinal emitido sempre que a vida mudar (útil para atualizar HUD)
-signal health_changed(current: int, maximum: int)
-signal died
-
-@onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
-@onready var detection_area: Area2D = $DetectionArea
-@onready var attack_area: Area2D = $AttackArea
-@onready var attack_timer: Timer = $AttackTimer
+# ── Nós ───────────────────────────────────────
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var attack_timer: Timer = $AttackTimer
 
+# ── Estado interno ─────────────────────────────
 var state: State = State.PATROL
 var target: Node2D = null
-var patrol_origin: Vector2
-var patrol_target: Vector2
-var can_attack: bool = true
 
+var patrol_origin: Vector2
+var patrol_dir: float = 1.0       # 1 = direita, -1 = esquerda
+
+var can_attack: bool = true
+var _flashing: bool = false
+
+# ──────────────────────────────────────────────
 func _ready() -> void:
+	health = max_health
 	patrol_origin = global_position
-	_pick_patrol_point()
 
 	attack_timer.wait_time = attack_cooldown
 	attack_timer.one_shot = true
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
+	
+	print("Inimigo iniciado em: ", global_position)
+	var players := get_tree().get_nodes_in_group("player")
+	print("Players encontrados: ", players.size())
 
-	# Configura raios das áreas via código (opcional — pode ajustar na cena)
-	var det_shape := detection_area.get_node("CollisionShape2D")
-	(det_shape.shape as CircleShape2D).radius = detection_radius
-
-	var atk_shape := attack_area.get_node("CollisionShape2D")
-	(atk_shape.shape as CircleShape2D).radius = attack_range
-
-	detection_area.body_entered.connect(_on_detection_body_entered)
-	detection_area.body_exited.connect(_on_detection_body_exited)
-
+# ──────────────────────────────────────────────
 func _physics_process(delta: float) -> void:
+	# Gravidade
+	if not is_on_floor():
+		velocity += get_gravity() * delta
+
+	# Detecção direta por distância — sem precisar de Area2D
+	_update_target()
+
 	match state:
-		State.PATROL:
-			_patrol()
-		State.CHASE:
-			_chase()
-		State.ATTACK:
-			_try_attack()
+		State.PATROL:  _patrol()
+		State.CHASE:   _chase()
+		State.ATTACK:  _try_attack()
 
 	move_and_slide()
 	_update_animation()
+
+# ──────────────────────────────────────────────
+# DETECÇÃO
+# ──────────────────────────────────────────────
+
+func _update_target() -> void:
+	
+	# Não interrompe durante o ataque
+	if state == State.ATTACK:
+		return
+
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		
+		return
+
+	var p := players[0] as Node2D
+	var dist := global_position.distance_to(p.global_position)
+	
+	print("Estado atual: ", State.keys()[state], " | dist: ", dist, " | attack_range: ", attack_range)
+
+
+	if dist <= attack_range:
+		target = p
+		_enter_attack()
+	elif dist <= detection_radius:
+		target = p
+		if state != State.CHASE:
+			_enter_chase()
+	else:
+		target = null
+		if state != State.PATROL:
+			_enter_patrol()
 
 # ──────────────────────────────────────────────
 # ESTADOS
 # ──────────────────────────────────────────────
 
 func _patrol() -> void:
-	if global_position.distance_to(patrol_target) < 10.0:
-		_pick_patrol_point()
+	velocity.x = speed * patrol_dir
+	animated_sprite.flip_h = patrol_dir < 0
 
-	nav_agent.target_position = patrol_target
-	var next := nav_agent.get_next_path_position()
-	velocity = (next - global_position).normalized() * speed
+	var dist_from_origin := global_position.x - patrol_origin.x
+	if dist_from_origin >= patrol_distance:
+		patrol_dir = -1.0
+	elif dist_from_origin <= -patrol_distance:
+		patrol_dir = 1.0
+
+	if is_on_wall():
+		patrol_dir *= -1.0
 
 func _chase() -> void:
 	if not is_instance_valid(target):
 		_enter_patrol()
 		return
 
-	var dist := global_position.distance_to(target.global_position)
+	var diff := target.global_position.x - global_position.x
 
-	if dist <= attack_range:
-		_enter_attack()
-		return
-
-	nav_agent.target_position = target.global_position
-	var next := nav_agent.get_next_path_position()
-	velocity = (next - global_position).normalized() * chase_speed
+	# Pequena margem para não ficar tremendo quando está muito próximo
+	if abs(diff) > 5.0:
+		velocity.x = sign(diff) * chase_speed
+		animated_sprite.flip_h = diff < 0
+	else:
+		velocity.x = 0.0
+		
+		
+# ──────────────────────────────────────────────
+# ATAQUE
+# ──────────────────────────────────────────────
 
 func _try_attack() -> void:
+	
+	
 	if not is_instance_valid(target):
 		_enter_patrol()
 		return
 
+	# Se o player saiu do alcance, volta a perseguir
 	var dist := global_position.distance_to(target.global_position)
-
+	print("dist até player: ", dist, " | attack_range: ", attack_range)
 	if dist > attack_range:
 		_enter_chase()
 		return
 
-	velocity = Vector2.ZERO
+	# Para o movimento horizontal mas mantém a gravidade intacta
+	velocity.x = 0.0
+
+	# Vira para o player
+	var diff := target.global_position.x - global_position.x
+	animated_sprite.flip_h = diff < 0
 
 	if can_attack:
 		_do_attack()
 
-# ──────────────────────────────────────────────
-# AÇÕES
-# ──────────────────────────────────────────────
 
 func _do_attack() -> void:
+	
 	can_attack = false
+	animated_sprite.play("attack")
 	attack_timer.start()
 
-	# Aplica dano se o alvo ainda está na área de ataque
-	for body in attack_area.get_overlapping_bodies():
-		if body.has_method("take_damage"):
-			body.take_damage(attack_damage)
+	# Aplica dano com um pequeno delay (simula o frame do golpe)
+	await get_tree().create_timer(0.2).timeout
 
-	animated_sprite.play("attack")
+	# Verifica se o player ainda está no alcance antes de aplicar o dano
+	if is_instance_valid(target):
+		var dist := global_position.distance_to(target.global_position)
+		if dist <= attack_range:
+			if target.has_method("take_damage"):
+				target.take_damage(attack_damage)
 
 func _on_attack_timer_timeout() -> void:
 	can_attack = true
-
+	# Volta para idle após o ataque
+	if animated_sprite.animation == "attack":
+		animated_sprite.play("idle")
 # ──────────────────────────────────────────────
-# TRANSIÇÕES DE ESTADO
-# ──────────────────────────────────────────────
-
-func _enter_patrol() -> void:
-	state = State.PATROL
-	target = null
-	_pick_patrol_point()
-
-func _enter_chase() -> void:
-	state = State.CHASE
-
-func _enter_attack() -> void:
-	state = State.ATTACK
-	velocity = Vector2.ZERO
-
-# ──────────────────────────────────────────────
-# DETECÇÃO
+# DANO / MORTE
 # ──────────────────────────────────────────────
 
-func _on_detection_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		target = body
-		_enter_chase()
+func take_damage(amount: int) -> void:
+	health = clamp(health - amount, 0, max_health)
+	_flash(Color.RED)
+	if health == 0:
+		_die()
 
-func _on_detection_body_exited(body: Node2D) -> void:
-	if body == target:
-		_enter_patrol()
-
-# ──────────────────────────────────────────────
-# PATRULHA
-# ──────────────────────────────────────────────
-
-func _pick_patrol_point() -> void:
-	var angle := randf() * TAU
-	var dist  := randf_range(40.0, patrol_radius)
-	patrol_target = patrol_origin + Vector2(cos(angle), sin(angle)) * dist
+func _die() -> void:
+	queue_free()
 
 # ──────────────────────────────────────────────
-# ANIMAÇÃO (adapte aos nomes das suas animações)
+# ANIMAÇÃO
 # ──────────────────────────────────────────────
 
 func _update_animation() -> void:
 	match state:
 		State.PATROL, State.CHASE:
-			if velocity.length() > 1.0:
-				animated_sprite.play("walk")
-				animated_sprite.flip_h = velocity.x < 0
+			if abs(velocity.x) > 1.0:
+				if animated_sprite.animation != "walk":
+					animated_sprite.play("walk")
+				# Remova o flip_h daqui — já é feito no _patrol() e _chase()
 			else:
-				animated_sprite.play("idle")
+				if animated_sprite.animation != "idle":
+					animated_sprite.play("idle")
 		State.ATTACK:
-			pass  # atacar já troca a animação em _do_attack()
-			
-func take_damage(amount: int) -> void:
-	health = clamp(health - amount, 0, max_health)
-	health_changed.emit(health, max_health)
+			pass
 
-	# Feedback visual: pisca em vermelho
-	_flash(Color.RED)
-
-	if health == 0:
-		_die()
-
-func heal(amount: int) -> void:
-	health = clamp(health + amount, 0, max_health)
-	health_changed.emit(health, max_health)
-
-func _die() -> void:
-	died.emit()
-	# Substitua pela sua lógica: animação de morte, reload de cena, etc.
-	queue_free()
+# ──────────────────────────────────────────────
+# FLASH DE DANO
+# ──────────────────────────────────────────────
 
 func _flash(color: Color, duration: float = 0.15) -> void:
-	var sprite := $AnimatedSprite2D  # ajuste ao nó do seu sprite
-	sprite.modulate = color
+	if _flashing:
+		return
+	_flashing = true
+	animated_sprite.modulate = color
 	await get_tree().create_timer(duration).timeout
-	sprite.modulate = Color.WHITE
+	animated_sprite.modulate = Color.WHITE
+	_flashing = false
+
+# ──────────────────────────────────────────────
+# TRANSIÇÕES
+# ──────────────────────────────────────────────
+
+
+
+func _enter_patrol() -> void:
+	state = State.PATROL
+	target = null
+
+func _enter_chase() -> void:
+	state = State.CHASE
+	
+
+func _enter_attack() -> void:
+	state = State.ATTACK
+	velocity.x = 0.0
