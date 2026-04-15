@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://506253r2q8dy" path="res://imagens/eu - Copia - Copia.jpg" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://b6l7oywbim274" path="res://player.tscn" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://cibh2ljhchgsu" path="res://Skeleton.tscn" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://dyg0dn0lau7ot" path="res://areaverde.tscn" id="4_1bvp3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0xm2m"]
 size = Vector2(2681.5, 263.5)
@@ -26,3 +27,5 @@ position = Vector2(294, -102)
 
 [node name="Skeleton" parent="." unique_id=829272368 instance=ExtResource("3_h2yge")]
 position = Vector2(742, 128)
+
+[node name="Node2D" parent="." unique_id=1258346089 instance=ExtResource("4_1bvp3")]

@@ -13,7 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://dm1heln2qate4" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Run.png" id="10_q13i1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4flbx"]
-size = Vector2(36, 56.5)
+size = Vector2(32, 41)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hl5qd"]
 atlas = ExtResource("2_n7ghd")
@@ -449,10 +449,12 @@ animations = [{
 script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=190188607]
-position = Vector2(392, 347)
 shape = SubResource("RectangleShape2D_4flbx")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1372160093]
-position = Vector2(399, 328)
+position = Vector2(3.8146973e-06, -19.75)
+scale = Vector2(0.9333334, 1.04375)
 sprite_frames = SubResource("SpriteFrames_pylmc")
-animation = &"attack"
+animation = &"run"
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=15545637]

@@ -17,6 +17,7 @@ var health: int
 # ── Nós ───────────────────────────────────────
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var attack_timer: Timer = $AttackTimer
+@onready var damage_timer: Timer = $DamageTime
 
 # ── Estado interno ─────────────────────────────
 var state: State = State.PATROL
@@ -36,6 +37,10 @@ func _ready() -> void:
 	attack_timer.wait_time = attack_cooldown
 	attack_timer.one_shot = true
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
+	
+	damage_timer.wait_time = 0.2  # delay até o golpe conectar
+	damage_timer.one_shot = true
+	damage_timer.timeout.connect(_on_damage_timer_timeout)
 	
 	print("Inimigo iniciado em: ", global_position)
 	var players := get_tree().get_nodes_in_group("player")
@@ -76,7 +81,7 @@ func _update_target() -> void:
 	var p := players[0] as Node2D
 	var dist := global_position.distance_to(p.global_position)
 	
-	print("Estado atual: ", State.keys()[state], " | dist: ", dist, " | attack_range: ", attack_range)
+	
 
 
 	if dist <= attack_range:
@@ -136,7 +141,7 @@ func _try_attack() -> void:
 
 	# Se o player saiu do alcance, volta a perseguir
 	var dist := global_position.distance_to(target.global_position)
-	print("dist até player: ", dist, " | attack_range: ", attack_range)
+	
 	if dist > attack_range:
 		_enter_chase()
 		return
@@ -156,10 +161,11 @@ func _do_attack() -> void:
 	
 	can_attack = false
 	animated_sprite.play("attack")
-	attack_timer.start()
+	attack_timer.start()   # controla o cooldown entre ataques
+	damage_timer.start()   # controla quando o dano é aplicado
 
 	# Aplica dano com um pequeno delay (simula o frame do golpe)
-	await get_tree().create_timer(0.2).timeout
+	
 
 	# Verifica se o player ainda está no alcance antes de aplicar o dano
 	if is_instance_valid(target):
@@ -168,9 +174,16 @@ func _do_attack() -> void:
 			if target.has_method("take_damage"):
 				target.take_damage(attack_damage)
 
+func _on_damage_timer_timeout() -> void:
+	# Aplica o dano quando o golpe conecta
+	if is_instance_valid(target):
+		var dist := global_position.distance_to(target.global_position)
+		if dist <= attack_range:
+			if target.has_method("take_damage"):
+				target.take_damage(attack_damage)
+
 func _on_attack_timer_timeout() -> void:
 	can_attack = true
-	# Volta para idle após o ataque
 	if animated_sprite.animation == "attack":
 		animated_sprite.play("idle")
 # ──────────────────────────────────────────────
