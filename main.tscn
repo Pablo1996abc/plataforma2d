@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://b6l7oywbim274" path="res://player.tscn" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://cibh2ljhchgsu" path="res://Skeleton.tscn" id="3_h2yge"]
 [ext_resource type="PackedScene" uid="uid://dyg0dn0lau7ot" path="res://areaverde.tscn" id="4_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://b5tu5u1xh3efp" path="res://verdepantano.tscn" id="5_lquwl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0xm2m"]
 size = Vector2(2681.5, 263.5)
@@ -29,3 +30,6 @@ position = Vector2(294, -102)
 position = Vector2(742, 128)
 
 [node name="Node2D" parent="." unique_id=1258346089 instance=ExtResource("4_1bvp3")]
+
+[node name="verde pantano" parent="." unique_id=1853354245 instance=ExtResource("5_lquwl")]
+position = Vector2(1233, 85)
