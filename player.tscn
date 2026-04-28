@@ -13,7 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://dm1heln2qate4" path="res://imagens/FreeKnight_v1/Colour2/Outline/120x80_PNGSheets/_Run.png" id="10_q13i1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4flbx"]
-size = Vector2(32, 41)
+size = Vector2(27, 38)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hl5qd"]
 atlas = ExtResource("2_n7ghd")
@@ -445,16 +445,27 @@ animations = [{
 "speed": 16.0
 }]
 
-[node name="Player" type="CharacterBody2D" unique_id=865413931 groups=["Enemy", "Player", "player"]]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nvl01"]
+size = Vector2(23, 35)
+
+[node name="Player" type="CharacterBody2D" unique_id=865413931 groups=["Player", "player"]]
 script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=190188607]
+position = Vector2(-2.5, 1)
 shape = SubResource("RectangleShape2D_4flbx")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1372160093]
 position = Vector2(3.8146973e-06, -19.75)
 scale = Vector2(0.9333334, 1.04375)
 sprite_frames = SubResource("SpriteFrames_pylmc")
-animation = &"run"
+animation = &"hit"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=15545637]
+
+[node name="Hitbox" type="Area2D" parent="." unique_id=850638780]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=70242150]
+position = Vector2(-2.5, 1.5)
+shape = SubResource("RectangleShape2D_nvl01")
+debug_color = Color(0.8531859, 0.23987952, 0.7052934, 0.41960785)

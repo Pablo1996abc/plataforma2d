@@ -4,6 +4,10 @@ const SPEED = 150.0
 const RUN_SPEED = 300.0
 const JUMP_VELOCITY = -450.0
 var GRAVITY = ProjectSettings.get_setting("physics/2d/default_gravity")
+var is_hurt: bool = false
+var hurt_timer: float = 0.0
+const HURT_DURATION: float = 0.5  # tempo da animação de hit
+var health: int = 100
 
 @onready var sprite = $AnimatedSprite2D
 
@@ -11,6 +15,7 @@ var last_key_pressed = ""
 var tap_time_threshold = 0.3 
 var last_tap_time = 0.0
 var is_running = false
+
 
 func _physics_process(delta):
 	# 1. Gravidade
@@ -57,8 +62,27 @@ func handle_tap(dir_name: String):
 			is_running = true
 	last_key_pressed = dir_name
 	last_tap_time = current_time
+	
+func _ready():
+	$Hitbox.area_entered.connect(_on_hitbox_area_entered)  # ← nome aqui
 
+# ↓ precisa ser idêntico
+func _on_hitbox_area_entered(area):
+	is_hurt = true
+	hurt_timer = HURT_DURATION
+	
+	
+func take_damage(amount: int) -> void:
+	is_hurt = true
+	hurt_timer = HURT_DURATION
+	# se tiver sistema de vida:
+	health -= amount
+	
 func update_animation(direction_val: float):
+	if is_hurt and sprite.sprite_frames.has_animation("hit"):
+		sprite.play("hit")
+		return
+		
 	if Input.is_action_pressed("attack") and sprite.sprite_frames.has_animation("attack"):
 		sprite.play("attack")
 		return
@@ -67,6 +91,7 @@ func update_animation(direction_val: float):
 		sprite.play("jump")
 	elif Input.is_action_pressed("ui_down"):
 		sprite.play("crouch")
+	
 	elif abs(direction_val) > 0.1:
 		sprite.flip_h = direction_val < 0
 		sprite.play("run")

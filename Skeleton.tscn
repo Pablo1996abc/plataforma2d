@@ -7,14 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://d1vko8cfeuajk" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Idle.png" id="4_rsp4x"]
 [ext_resource type="Texture2D" uid="uid://bo6famcnfg4yd" path="res://imagens/Monsters_Creatures_Fantasy/Skeleton/Walk.png" id="5_0rk3j"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_vsooi"]
-radius = 17.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_rsp4x"]
-radius = 62.39391
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_dfc0f"]
-radius = 37.48333
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dfc0f"]
+radius = 12.0
+height = 58.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgngj"]
 atlas = ExtResource("1_637nb")
@@ -212,50 +207,37 @@ animations = [{
 "speed": 16.0
 }]
 
-[sub_resource type="NavigationPolygon" id="NavigationPolygon_dfc0f"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dfc0f"]
+size = Vector2(21, 44)
 
 [node name="Skeleton" type="CharacterBody2D" unique_id=829272368 groups=["Enemy"]]
 script = ExtResource("1_dfc0f")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1484114788]
-visibility_layer = 3
-position = Vector2(75, 106)
-shape = SubResource("CircleShape2D_vsooi")
-
-[node name="AttackArea" type="Area2D" parent="." unique_id=1600562285]
-visibility_layer = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1559305921]
-modulate = Color(1, 0.20392157, 1, 1)
-light_mask = 0
-position = Vector2(76, 105)
-shape = SubResource("CircleShape2D_rsp4x")
-
-[node name="DetectionArea" type="Area2D" parent="." unique_id=985206915]
-collision_layer = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=815173826]
-position = Vector2(77, 111)
-shape = SubResource("CircleShape2D_dfc0f")
+light_mask = 4
+visibility_layer = 2
+position = Vector2(5, -1)
+shape = SubResource("CapsuleShape2D_dfc0f")
 
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=188933650]
-position = Vector2(115, 83)
+position = Vector2(7, 0)
+exclude_parent = false
+target_position = Vector2(79, -1)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=677665135]
-position = Vector2(73.00003, 105.00002)
-scale = Vector2(1.0016667, 1.0283326)
+position = Vector2(0, 7.6293945e-06)
+scale = Vector2(0.98041636, 1.0141662)
 sprite_frames = SubResource("SpriteFrames_4t2op")
 animation = &"attack"
-
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=313329152]
-
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="NavigationAgent2D" unique_id=1049010653]
-navigation_polygon = SubResource("NavigationPolygon_dfc0f")
 
 [node name="AttackTimer" type="Timer" parent="." unique_id=123536129]
 wait_time = 2.502
 
-[node name="DamageTime" type="Timer" parent="." unique_id=896147167]
+[node name="DamageTimer" type="Timer" parent="." unique_id=896147167]
 
-[connection signal="body_entered" from="DetectionArea" to="." method="_on_player_detector_body_entered"]
-[connection signal="body_exited" from="DetectionArea" to="." method="_on_player_detector_body_exited"]
+[node name="Hitbox" type="Area2D" parent="." unique_id=1448745256]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=109993314]
+position = Vector2(4, 1)
+shape = SubResource("RectangleShape2D_dfc0f")
+debug_color = Color(0.88027704, 0.13514358, 0.75713, 0.41960785)
