@@ -448,6 +448,10 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nvl01"]
 size = Vector2(23, 35)
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nvl01"]
+radius = 15.0
+height = 38.0
+
 [node name="Player" type="CharacterBody2D" unique_id=865413931 groups=["Player", "player"]]
 script = ExtResource("1_4flbx")
 
@@ -469,3 +473,9 @@ animation = &"hit"
 position = Vector2(-2.5, 1.5)
 shape = SubResource("RectangleShape2D_nvl01")
 debug_color = Color(0.8531859, 0.23987952, 0.7052934, 0.41960785)
+
+[node name="AttackHitbox" type="Area2D" parent="." unique_id=132603510]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox" unique_id=1290470666]
+position = Vector2(20, 2)
+shape = SubResource("CapsuleShape2D_nvl01")

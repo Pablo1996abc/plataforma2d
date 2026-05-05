@@ -8,8 +8,11 @@ var is_hurt: bool = false
 var hurt_timer: float = 0.0
 const HURT_DURATION: float = 0.5  # tempo da animação de hit
 var health: int = 100
+var _flashing: bool = false
 
 @onready var sprite = $AnimatedSprite2D
+@onready var attack_hitbox = $AttackHitbox
+
 
 var last_key_pressed = ""
 var tap_time_threshold = 0.3 
@@ -17,7 +20,21 @@ var last_tap_time = 0.0
 var is_running = false
 
 
+func _flash(color: Color, duration: float = 0.15) -> void:
+	if _flashing:
+		return
+	_flashing = true
+	sprite.modulate = color
+	await get_tree().create_timer(duration).timeout
+	sprite.modulate = Color.WHITE
+	_flashing = false
+
 func _physics_process(delta):
+	if is_hurt:
+		hurt_timer -= delta
+		if hurt_timer <= 0.0:
+			is_hurt = false
+			
 	# 1. Gravidade
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -63,30 +80,60 @@ func handle_tap(dir_name: String):
 	last_key_pressed = dir_name
 	last_tap_time = current_time
 	
-func _ready():
-	$Hitbox.area_entered.connect(_on_hitbox_area_entered)  # ← nome aqui
+func _ready():  # ← nome aqui
+	$Hitbox.area_entered.connect(_on_hitbox_area_entered)
+	attack_hitbox.monitoring = false  # começa desativado
+	sprite.animation_finished.connect(_on_animation_finished)
+	
+	attack_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 
-# ↓ precisa ser idêntico
+func _on_attack_hitbox_area_entered(area):
+	if area.get_parent() == self:
+		return
+	if area == $Hitbox:
+		return
+		
+	var parent = area.get_parent()
+	if parent.has_method("take_damage"):
+		parent.take_damage(10)  # dano do player
+	
+func _on_animation_finished():
+	if sprite.animation == "attack":
+		attack_hitbox.monitoring = false  # desativa ao terminar o ataque
+
+
 func _on_hitbox_area_entered(area):
+	# Ignora a própria hitbox de ataque
+	if area == attack_hitbox:
+		return
+	if area.get_parent() == self:
+		return
+		
 	is_hurt = true
 	hurt_timer = HURT_DURATION
+	_flash(Color.YELLOW)
 	
 	
 func take_damage(amount: int) -> void:
 	is_hurt = true
 	hurt_timer = HURT_DURATION
-	# se tiver sistema de vida:
 	health -= amount
+	_flash(Color.YELLOW)  # ← pisca amarelo
 	
 func update_animation(direction_val: float):
 	if is_hurt and sprite.sprite_frames.has_animation("hit"):
 		sprite.play("hit")
 		return
 		
-	if Input.is_action_pressed("attack") and sprite.sprite_frames.has_animation("attack"):
+	if Input.is_action_just_pressed("attack") and sprite.sprite_frames.has_animation("attack"):
 		sprite.play("attack")
+		attack_hitbox.monitoring = true   # ativa a hitbox ao atacar
+		# vira a hitbox na direção certa
+		attack_hitbox.scale.x = -1.0 if sprite.flip_h else 1.0
 		return
-
+	if Input.is_action_pressed("attack"):
+		return
+	attack_hitbox.monitoring = false
 	if not is_on_floor():
 		sprite.play("jump")
 	elif Input.is_action_pressed("ui_down"):

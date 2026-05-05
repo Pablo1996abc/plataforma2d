@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-enum State { PATROL, CHASE, ATTACK }
+enum State { PATROL, CHASE, ATTACK, HURT }
 
 # ── Exportáveis ────────────────────────────────
 @export var speed: float = 80.0
@@ -26,6 +26,8 @@ var patrol_dir: float = 1.0
 var can_attack: bool = true
 var _flashing: bool = false
 var health: int
+var hurt_timer: float = 0.0
+const HURT_DURATION: float = 0.5
 
 # ──────────────────────────────────────────────
 func _ready() -> void:
@@ -42,6 +44,16 @@ func _ready() -> void:
 
 # ──────────────────────────────────────────────
 func _physics_process(delta: float) -> void:
+	# Atualiza timer de hurt
+	if state == State.HURT:
+		hurt_timer -= delta
+		if hurt_timer <= 0.0:
+			state = State.PATROL
+		velocity.x = move_toward(velocity.x, 0, speed)
+		move_and_slide()
+		_update_animation()
+		return  # não processa mais nada enquanto está em hurt
+
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
@@ -59,11 +71,10 @@ func _physics_process(delta: float) -> void:
 func _do_patrol() -> void:
 	var p := _get_player()
 	if p != null:
-		
 		var dist := global_position.distance_to(p.global_position)
-		var vertical_diff: float = abs(global_position.y - p.global_position.y)  # ADICIONAR
-		
-		if dist <= detection_radius and vertical_diff < 50.0:  # ADICIONAR limite vertical
+		var vertical_diff: float = abs(global_position.y - p.global_position.y)
+
+		if dist <= detection_radius and vertical_diff < 50.0:
 			target = p
 			state = State.CHASE
 			return
@@ -90,9 +101,9 @@ func _do_chase() -> void:
 		return
 
 	var dist := global_position.distance_to(p.global_position)
-	var vertical_diff: float = abs(global_position.y - p.global_position.y)  # ADICIONAR
+	var vertical_diff: float = abs(global_position.y - p.global_position.y)
 
-	if dist > detection_radius or vertical_diff >= 50.0:  # ADICIONAR
+	if dist > detection_radius or vertical_diff >= 50.0:
 		target = null
 		state = State.PATROL
 		return
@@ -139,7 +150,7 @@ func _on_damage_timer_timeout() -> void:
 	if dist <= attack_range:
 		if target.has_method("take_damage"):
 			target.take_damage(attack_damage)
-			_flash(Color.ORANGE)  # feedback visual ao acertar
+			_flash(Color.ORANGE)
 
 func _on_attack_timer_timeout() -> void:
 	can_attack = true
@@ -152,6 +163,11 @@ func take_damage(amount: int) -> void:
 	_flash(Color.RED)
 	if health == 0:
 		_die()
+		return
+	# Entra no estado HURT
+	state = State.HURT
+	hurt_timer = HURT_DURATION
+	can_attack = true  # reseta o ataque para não travar
 
 func _die() -> void:
 	animated_sprite.play("death")
@@ -171,6 +187,11 @@ func _flash(color: Color, duration: float = 0.15) -> void:
 # ANIMAÇÃO
 # ──────────────────────────────────────────────
 func _update_animation() -> void:
+	if state == State.HURT:
+		if animated_sprite.sprite_frames.has_animation("hurt"):
+			animated_sprite.play("hurt")
+		return
+
 	if state == State.ATTACK:
 		return
 
@@ -184,7 +205,6 @@ func _update_animation() -> void:
 # ──────────────────────────────────────────────
 # UTILITÁRIO
 # ──────────────────────────────────────────────
-
 func _get_player() -> Node2D:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():
