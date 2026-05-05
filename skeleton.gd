@@ -42,6 +42,24 @@ func _ready() -> void:
 	damage_timer.one_shot = true
 	damage_timer.timeout.connect(_on_damage_timer_timeout)
 
+	animated_sprite.animation_finished.connect(_on_animation_finished)
+# ──────────────────────────────────────────────
+func _on_animation_finished() -> void:
+	if animated_sprite.animation == "attack":
+		if is_instance_valid(target):
+			var dist := global_position.distance_to(target.global_position)
+			if dist <= attack_range:
+				# Se can_attack já voltou, ataca de novo
+				# Se não, volta pro chase até o timer liberar
+				if can_attack:
+					state = State.ATTACK
+				else:
+					# Toca idle enquanto espera o cooldown
+					animated_sprite.play("idle")
+			else:
+				state = State.CHASE
+		else:
+			state = State.PATROL
 # ──────────────────────────────────────────────
 func _physics_process(delta: float) -> void:
 	# Atualiza timer de hurt
@@ -153,23 +171,28 @@ func _on_damage_timer_timeout() -> void:
 			_flash(Color.ORANGE)
 
 func _on_attack_timer_timeout() -> void:
+	
+	print("Attack timer terminou, can_attack voltou para true")
 	can_attack = true
 
 # ──────────────────────────────────────────────
 # DANO / MORTE
 # ──────────────────────────────────────────────
 func take_damage(amount: int) -> void:
+	
 	health = clamp(health - amount, 0, max_health)
+	
 	_flash(Color.RED)
 	if health == 0:
+		print("Chamando _die!")
 		_die()
 		return
-	# Entra no estado HURT
 	state = State.HURT
 	hurt_timer = HURT_DURATION
-	can_attack = true  # reseta o ataque para não travar
+	can_attack = true
 
 func _die() -> void:
+	print("Esqueleto morreu!")
 	animated_sprite.play("death")
 	await animated_sprite.animation_finished
 	queue_free()
