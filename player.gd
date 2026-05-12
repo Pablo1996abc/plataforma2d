@@ -9,6 +9,8 @@ var hurt_timer: float = 0.0
 const HURT_DURATION: float = 0.5  # tempo da animação de hit
 var health: int = 100
 var _flashing: bool = false
+var is_attacking: bool = false
+var combo_queued: bool = false  # jogador segurou o botão durante o ataque
 
 @onready var sprite = $AnimatedSprite2D
 @onready var attack_hitbox = $AttackHitbox
@@ -99,7 +101,21 @@ func _on_attack_hitbox_area_entered(area):
 	
 func _on_animation_finished():
 	if sprite.animation == "attack":
-		attack_hitbox.monitoring = false  # desativa ao terminar o ataque
+		attack_hitbox.monitoring = false
+		# Se segurou o botão durante o ataque, faz o combo
+		if combo_queued and sprite.sprite_frames.has_animation("attack combo"):
+			combo_queued = false
+			sprite.play("attack combo")
+			attack_hitbox.monitoring = true
+			attack_hitbox.scale.x = -1.0 if sprite.flip_h else 1.0
+		else:
+			combo_queued = false
+			is_attacking = false
+
+	elif sprite.animation == "attack combo":
+		attack_hitbox.monitoring = false
+		is_attacking = false
+		combo_queued = false
 
 
 func _on_hitbox_area_entered(area):
@@ -123,22 +139,33 @@ func take_damage(amount: int) -> void:
 func update_animation(direction_val: float):
 	if is_hurt and sprite.sprite_frames.has_animation("hit"):
 		sprite.play("hit")
+		attack_hitbox.monitoring = false
+		is_attacking = false
+		combo_queued = false
 		return
-		
+
+	# Se está no meio de um ataque
+	if is_attacking:
+		# Registra o combo se segurar o botão
+		if Input.is_action_pressed("attack"):
+			combo_queued = true
+		return
+
+	# Novo ataque
 	if Input.is_action_just_pressed("attack") and sprite.sprite_frames.has_animation("attack"):
+		is_attacking = true
+		combo_queued = false
 		sprite.play("attack")
-		attack_hitbox.monitoring = true   # ativa a hitbox ao atacar
-		# vira a hitbox na direção certa
+		attack_hitbox.monitoring = true
 		attack_hitbox.scale.x = -1.0 if sprite.flip_h else 1.0
 		return
-	if Input.is_action_pressed("attack"):
-		return
+
 	attack_hitbox.monitoring = false
+
 	if not is_on_floor():
 		sprite.play("jump")
 	elif Input.is_action_pressed("ui_down"):
 		sprite.play("crouch")
-	
 	elif abs(direction_val) > 0.1:
 		sprite.flip_h = direction_val < 0
 		sprite.play("run")
