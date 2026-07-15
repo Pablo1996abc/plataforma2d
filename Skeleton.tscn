@@ -208,7 +208,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dfc0f"]
-size = Vector2(21, 44)
+size = Vector2(23.5, 50)
 
 [node name="Skeleton" type="CharacterBody2D" unique_id=829272368 groups=["Enemy"]]
 script = ExtResource("1_dfc0f")
@@ -235,9 +235,9 @@ wait_time = 2.502
 
 [node name="DamageTimer" type="Timer" parent="." unique_id=896147167]
 
-[node name="Hitbox" type="Area2D" parent="." unique_id=1448745256]
+[node name="Hitbox" type="Area2D" parent="." unique_id=1448745256 groups=["Enemy"]]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=109993314]
-position = Vector2(4, 1)
+position = Vector2(5.25, 0)
 shape = SubResource("RectangleShape2D_dfc0f")
 debug_color = Color(0.88027704, 0.13514358, 0.75713, 0.41960785)

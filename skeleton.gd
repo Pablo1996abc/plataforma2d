@@ -17,6 +17,8 @@ enum State { PATROL, CHASE, ATTACK, HURT }
 @onready var attack_timer: Timer = $AttackTimer
 @onready var damage_timer: Timer = $DamageTimer
 @onready var ray: RayCast2D = $RayCast2D
+# Ajuste o caminho abaixo para o nome real do seu nó de hitbox na cena
+@onready var hitbox: Node2D = $Hitbox
 
 # ── Estado interno ─────────────────────────────
 var state: State = State.PATROL
@@ -28,6 +30,10 @@ var _flashing: bool = false
 var health: int
 var hurt_timer: float = 0.0
 const HURT_DURATION: float = 0.5
+
+# Guarda a posição original (positiva) do hitbox para poder espelhar
+var _hitbox_base_x: float = 0.0
+var facing_left: bool = false
 
 # ──────────────────────────────────────────────
 func _ready() -> void:
@@ -43,26 +49,27 @@ func _ready() -> void:
 	damage_timer.timeout.connect(_on_damage_timer_timeout)
 
 	animated_sprite.animation_finished.connect(_on_animation_finished)
+
+	if hitbox:
+		_hitbox_base_x = abs(hitbox.position.x)
+
 # ──────────────────────────────────────────────
 func _on_animation_finished() -> void:
 	if animated_sprite.animation == "attack":
 		if is_instance_valid(target):
 			var dist := global_position.distance_to(target.global_position)
 			if dist <= attack_range:
-				# Se can_attack já voltou, ataca de novo
-				# Se não, volta pro chase até o timer liberar
 				if can_attack:
 					state = State.ATTACK
 				else:
-					# Toca idle enquanto espera o cooldown
 					animated_sprite.play("idle")
 			else:
 				state = State.CHASE
 		else:
 			state = State.PATROL
+
 # ──────────────────────────────────────────────
 func _physics_process(delta: float) -> void:
-	# Atualiza timer de hurt
 	if state == State.HURT:
 		hurt_timer -= delta
 		if hurt_timer <= 0.0:
@@ -70,7 +77,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		move_and_slide()
 		_update_animation()
-		return  # não processa mais nada enquanto está em hurt
+		return
 
 	if not is_on_floor():
 		velocity += get_gravity() * delta
@@ -82,6 +89,15 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_animation()
+
+# ──────────────────────────────────────────────
+# ESPELHAMENTO (sprite + hitbox juntos)
+# ──────────────────────────────────────────────
+func _set_facing(is_left: bool) -> void:
+	facing_left = is_left
+	animated_sprite.flip_h = is_left
+	if hitbox:
+		hitbox.position.x = -_hitbox_base_x if is_left else _hitbox_base_x
 
 # ──────────────────────────────────────────────
 # PATRULHA
@@ -98,7 +114,7 @@ func _do_patrol() -> void:
 			return
 
 	velocity.x = speed * patrol_dir
-	animated_sprite.flip_h = patrol_dir < 0
+	_set_facing(patrol_dir < 0)
 
 	var dist_origin := global_position.x - patrol_origin.x
 	if dist_origin >= patrol_distance:
@@ -134,7 +150,7 @@ func _do_chase() -> void:
 	target = p
 	var diff := p.global_position.x - global_position.x
 	velocity.x = sign(diff) * chase_speed
-	animated_sprite.flip_h = diff < 0
+	_set_facing(diff < 0)
 
 # ──────────────────────────────────────────────
 # ATAQUE
@@ -153,7 +169,7 @@ func _do_attack_state() -> void:
 		return
 
 	var diff := target.global_position.x - global_position.x
-	animated_sprite.flip_h = diff < 0
+	_set_facing(diff < 0)
 
 	if can_attack:
 		can_attack = false
@@ -162,6 +178,8 @@ func _do_attack_state() -> void:
 		damage_timer.start()
 
 func _on_damage_timer_timeout() -> void:
+	if state == State.HURT or state == State.PATROL:
+		return
 	if not is_instance_valid(target):
 		return
 	var dist := global_position.distance_to(target.global_position)
@@ -171,28 +189,26 @@ func _on_damage_timer_timeout() -> void:
 			_flash(Color.ORANGE)
 
 func _on_attack_timer_timeout() -> void:
-	
-	print("Attack timer terminou, can_attack voltou para true")
 	can_attack = true
 
 # ──────────────────────────────────────────────
 # DANO / MORTE
 # ──────────────────────────────────────────────
 func take_damage(amount: int) -> void:
-	
 	health = clamp(health - amount, 0, max_health)
-	
 	_flash(Color.RED)
 	if health == 0:
-		print("Chamando _die!")
 		_die()
 		return
 	state = State.HURT
 	hurt_timer = HURT_DURATION
 	can_attack = true
+	attack_timer.stop()
+	damage_timer.stop()
 
 func _die() -> void:
-	print("Esqueleto morreu!")
+	attack_timer.stop()
+	damage_timer.stop()
 	animated_sprite.play("death")
 	await animated_sprite.animation_finished
 	queue_free()

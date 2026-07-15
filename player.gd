@@ -147,7 +147,7 @@ func update_animation(direction_val: float):
 	# Se está no meio de um ataque
 	if is_attacking:
 		# Registra o combo se segurar o botão
-		if Input.is_action_pressed("attack"):
+		if Input.is_action_just_pressed("attack"):
 			combo_queued = true
 		return
 
